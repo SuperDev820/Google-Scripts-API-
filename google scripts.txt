@@ -35,6 +35,7 @@ function handleResponse(e) {
     // next set where we write the data - you could write to multiple/alternate destinations
     var doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
     var sheet = doc.getSheetByName(SHEET_NAME);
+    var trackerSheet = doc.getSheetByName(TRACKER_SHEET_NAME);
     
     // we'll assume header is in row 1 but you can override with header_row in GET/POST data
     var headRow = e.parameter.header_row || 1;
@@ -51,6 +52,50 @@ function handleResponse(e) {
     }
     // more efficient to set values as [][] array than individually
     sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
+
+    //TRACER
+    currentRow = getRow(e.parameter["agent_id"], e.parameter["agent"]);
+    if (e.parameter["Status"] == "Sold") {
+        var temp1 = trackerSheet.getRange(currentRow,3).getValue();
+        trackerSheet.getRange(currentRow,3).setValue(temp1 + 1);
+        var temp2 = trackerSheet.getRange(currentRow,4).getValue();
+        trackerSheet.getRange(currentRow,4).setValue(temp2 + 1);
+        var temp3 = (temp2/temp1)*100;
+        var temp = temp3.toString() + "%";
+        trackerSheet.getRange(currentRow,5).setValue(temp);
+    } else if (e.parameter["Status"] == "Returned") {
+        var temp1 = trackerSheet.getRange(currentRow,3).getValue();
+        var temp2 = trackerSheet.getRange(currentRow,4).getValue();
+        trackerSheet.getRange(currentRow,4).setValue(temp2 - 1);
+        var temp3 = (temp2/temp1)*100;
+        var temp = temp3.toString() + "%";
+        trackerSheet.getRange(currentRow,5).setValue(temp);
+    }
+
+    var spartan_total1 = mySum("C6:C22");
+    trackerSheet.getRange("C23").setValue(spartan_total1);
+    var spartan_total2 = mySum("D6:D22");
+    trackerSheet.getRange("D23").setValue(spartan_total2);
+    var spartan_total3 = (spartan_total2/spartan_total1)*100;
+    var spartan_total = spartan_total3.toString() + "%";
+    trackerSheet.getRange("E23").setValue(spartan_total);
+
+    var titan_total1 = mySum("C27:C40");
+    trackerSheet.getRange("C42").setValue(titan_total1);
+    var titan_total2 = mySum("D27:D40");
+    trackerSheet.getRange("D42").setValue(titan_total2);
+    var titan_total3 = (titan_total2/titan_total1)*100;
+    var titan_total = titan_total3.toString() + "%";
+    trackerSheet.getRange("E42").setValue(titan_total);
+
+    trackerSheet.getRange("C43").setValue(spartan_total1 + titan_total1);
+    var total = (spartan_total3 + titan_total3)/2;
+    var totalpro = total.toString() + "%";
+    trackerSheet.getRange("F43").setValue(totalpro);
+
+    if () {
+    }
+
     // return json success results
     return ContentService
           .createTextOutput(JSON.stringify({"result":"success", "row": nextRow}))
@@ -68,4 +113,26 @@ function handleResponse(e) {
 function setup() {
     var doc = SpreadsheetApp.getActiveSpreadsheet();
     SCRIPT_PROP.setProperty("key", doc.getId());
+}
+
+function getRow(agent_id, agent_name) {
+    var doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
+    var trackerSheet = doc.getSheetByName(TRACKER_SHEET_NAME);
+
+    var agent = agent_id.toString() + " " + agent_name;
+    var agents = trackerSheet.getRange(1, 1, trackerSheet.getLastRow(), 1).getValues()[0];
+    for (i in agents){
+        if (agents[i] == agent){
+            return i+1;
+        }
+    }
+}
+
+function mySum(A1NotationString){
+    var doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
+    var trackerSheet = doc.getSheetByName(TRACKER_SHEET_NAME);
+
+    var sum=0;
+    trackerSheet.getRange(A1NotationString).getValues().forEach(function(item){sum+=Number(item);});
+    return sum;
 }
