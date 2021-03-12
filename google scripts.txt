@@ -39,7 +39,7 @@ function handleResponse(e) {
     var trackerSheet = doc.getSheetByName(TRACKER_SHEET_NAME);
     
     // we'll assume header is in row 1 but you can override with header_row in GET/POST data
-    var headRow = 1;
+    var headRow = e.parameter.header_row || 1;
     var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     var nextRow = sheet.getLastRow()+1; // get next row
     var row = []; 
@@ -54,134 +54,61 @@ function handleResponse(e) {
     // more efficient to set values as [][] array than individually
     sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
 
-    trackerSheet.getRange("F1").setValues(e.parameter["Status"]);
-
     // return data to Tracker
-    currentRow = getRow(e.parameter["agent_id"], e.parameter["Agent"]);
-    if (e.parameter["Status"] == "Sold") {
-      var temp1 = trackerSheet.getRange(currentRow,3).getValue();
-      trackerSheet.getRange(currentRow,3).setValue(temp1 + 1);
-      var temp2 = trackerSheet.getRange(currentRow,4).getValue();
-      trackerSheet.getRange(currentRow,4).setValue(temp2 + 1);
-      var temp3 = ((temp2+1)/(temp1+1))*100;
-      var temp = temp3.toString() + "%";
-      trackerSheet.getRange(currentRow,5).setValue(temp);
-    } else if (e.parameter["Status"] == "Returned") {
-      var temp1 = trackerSheet.getRange(currentRow,3).getValue();
-      var temp2 = trackerSheet.getRange(currentRow,4).getValue();
-      trackerSheet.getRange(currentRow,4).setValue(temp2 - 1);
-      var temp3 = ((temp2-1)/temp1)*100;
-      var temp = temp3.toString() + "%";
-      trackerSheet.getRange(currentRow,5).setValue(temp);
+    if (e.parameter["agent_id"] && e.parameter["Agent"]) {
+      currentRow = getRow(e.parameter["agent_id"], e.parameter["Agent"]);
+      if (e.parameter["Status"] == "Sold") {
+        var temp1 = trackerSheet.getRange(currentRow,3).getValue();
+        trackerSheet.getRange(currentRow,3).setValue(temp1 + 1);
+        var temp2 = trackerSheet.getRange(currentRow,4).getValue();
+        trackerSheet.getRange(currentRow,4).setValue(temp2 + 1);
+      } else if (e.parameter["Status"] == "Returned") {
+        var temp2 = trackerSheet.getRange(currentRow,4).getValue();
+        trackerSheet.getRange(currentRow,4).setValue(temp2 - 1);
+      }
     }
-
-    var spartan_total1 = mySum("C6:C22");
-    trackerSheet.getRange("C23").setValue(spartan_total1);
-    var spartan_total2 = mySum("D6:D22");
-    trackerSheet.getRange("D23").setValue(spartan_total2);
-    var spartan_total3 = (spartan_total2/spartan_total1)*100;
-    var spartan_total = spartan_total3.toString() + "%";
-    trackerSheet.getRange("E23").setValue(spartan_total);
-
-    var titan_total1 = mySum("C27:C40");
-    trackerSheet.getRange("C42").setValue(titan_total1);
-    var titan_total2 = mySum("D27:D40");
-    trackerSheet.getRange("D42").setValue(titan_total2);
-    var titan_total3 = (titan_total2/titan_total1)*100;
-    var titan_total = titan_total3.toString() + "%";
-    trackerSheet.getRange("E42").setValue(titan_total);
-
-    trackerSheet.getRange("C43").setValue(spartan_total1 + titan_total1);
-    var total = (spartan_total3 + titan_total3)/2;
-    var totalpro = total.toString() + "%";
-    trackerSheet.getRange("F43").setValue(totalpro);
 
     if (e.parameter["Buyer"] == "Sunpro") {
       if (e.parameter["Status"] == "Sold") {
         var sunpro_gross = trackerSheet.getRange("B44").getValue();
         sunpro_gross += 1;
         trackerSheet.getRange("B44").setValue(sunpro_gross);
-        var sunpro_price = trackerSheet.getRange("C44").getValue();
-        var temp_price = remove_dol(sunpro_price);
-        temp_price += e.parameter["Price"];
-        trackerSheet.getRange("C44").setValue("$"+temp_price);
       } else if (e.parameter["Status"] == "Returned") {
         var sunpro_ret = trackerSheet.getRange("D44").getValue();
         sunpro_ret += 1;
         trackerSheet.getRange("D44").setValue(sunpro_ret);
-        var sunpro_price = trackerSheet.getRange("C44").getValue();
-        var temp_price = remove_dol(sunpro_price);
-        temp_price -= e.parameter["Price"];
-        trackerSheet.getRange("C44").setValue("$"+temp_price);
       }
-      var sunpro_net = sunpro_gross - sunpro_ret;
-      trackerSheet.getRange("E44").setValue(sunpro_net);
     } else if (e.parameter["Buyer"] == "Suntuity") {
       if (e.parameter["Status"] == "Sold") {
         var suntuity_gross = trackerSheet.getRange("B45").getValue();
         suntuity_gross += 1;
         trackerSheet.getRange("B45").setValue(suntuity_gross);
-        var suntuity_price = trackerSheet.getRange("C45").getValue();
-        var temp_price = remove_dol(suntuity_price);
-        temp_price += e.parameter["Price"];
-        trackerSheet.getRange("C45").setValue("$"+temp_price);
       } else if (e.parameter["Status"] == "Returned") {
         var suntuity_ret = trackerSheet.getRange("D45").getValue();
         suntuity_ret += 1;
         trackerSheet.getRange("D45").setValue(suntuity_ret);
-        var suntuity_price = trackerSheet.getRange("C45").getValue();
-        var temp_price = remove_dol(suntuity_price);
-        temp_price -= e.parameter["Price"];
-        trackerSheet.getRange("C45").setValue("$"+temp_price);
       }
-      var suntuity_net = suntuity_gross - suntuity_ret;
-      trackerSheet.getRange("E45").setValue(suntuity_net);
     } else if (e.parameter["Buyer"] == "Trinity") {
       if (e.parameter["Status"] == "Sold") {
         var trinity_gross = trackerSheet.getRange("B46").getValue();
         trinity_gross += 1;
         trackerSheet.getRange("B46").setValue(trinity_gross);
-        var trinity_price = trackerSheet.getRange("C46").getValue();
-        var temp_price = remove_dol(trinity_price);
-        temp_price += e.parameter["Price"];
-        trackerSheet.getRange("C46").setValue("$"+temp_price);
       } else if (e.parameter["Status"] == "Returned") {
         var trinity_ret = trackerSheet.getRange("D46").getValue();
         trinity_ret += 1;
         trackerSheet.getRange("D46").setValue(trinity_ret);
-        var trinity_price = trackerSheet.getRange("C46").getValue();
-        var temp_price = remove_dol(trinity_price);
-        temp_price -= e.parameter["Price"];
-        trackerSheet.getRange("C46").setValue("$"+temp_price);
       }
-      var trinity_net = trinity_gross - trinity_ret;
-      trackerSheet.getRange("E46").setValue(trinity_net);
     } else if (e.parameter["Buyer"] == "Sunpower") {
       if (e.parameter["Status"] == "Sold") {
         var sunpower_gross = trackerSheet.getRange("B47").getValue();
         sunpower_gross += 1;
         trackerSheet.getRange("B47").setValue(sunpower_gross);
-        var sunpower_price = trackerSheet.getRange("C47").getValue();
-        var temp_price = remove_dol(sunpower_price);
-        temp_price += e.parameter["Price"];
-        trackerSheet.getRange("C47").setValue("$"+temp_price);
       } else if (e.parameter["Status"] == "Returned") {
         var sunpower_ret = trackerSheet.getRange("D47").getValue();
         sunpower_ret += 1;
         trackerSheet.getRange("D47").setValue(sunpower_ret);
-        var sunpower_price = trackerSheet.getRange("C47").getValue();
-        var temp_price = remove_dol(sunpower_price);
-        temp_price -= e.parameter["Price"];
-        trackerSheet.getRange("C47").setValue("$"+temp_price);
       }
-      var sunpower_net = sunpower_gross - sunpower_ret;
-      trackerSheet.getRange("E47").setValue(sunpower_net);
     }
-    trackerSheet.getRange("B49").setValue(mySum("B44:B47"));
-    trackerSheet.getRange("C49").setValue(mySum("C44:C47"));
-    trackerSheet.getRange("D49").setValue(mySum("D44:D47"));
-    trackerSheet.getRange("E49").setValue(mySum("E44:E47"));
-    trackerSheet.getRange("F49").setValue(mySum("E44:E47")/mySum("B44:B47"));
 
     // return json success results
     return ContentService
@@ -207,12 +134,14 @@ function getRow(agent_id, agent_name) {
   var trackerSheet = doc.getSheetByName(TRACKER_SHEET_NAME);
 
   var agent = String(agent_id) + " " + agent_name;
-  var agents = trackerSheet.getRange(6, 1, trackerSheet.getLastRow(), 1).getValues();
-  for (i in agents){
-    if (agents[i][0] == agent){
-      return i+1;
+  var agents = trackerSheet.getRange(1, 1, 40, 1).getValues();
+  for (var counter = 0; counter <= 39; counter = counter + 1){
+    if (agents[counter][0] == agent){
+      var a = counter+1;
+      break;
     }
   }
+  return a;
 }
 
 function mySum(A1NotationString){
