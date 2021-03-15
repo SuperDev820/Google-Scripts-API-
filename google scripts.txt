@@ -86,45 +86,47 @@ function handleResponse(e) {
       }
     }
 
-    if (e.parameter["Buyer"] == "Sunpro") {
-      if (e.parameter["Status"] == "Sold") {
-        var sunpro_gross = trackerSheet.getRange("B44").getValue();
-        sunpro_gross += 1;
-        trackerSheet.getRange("B44").setValue(sunpro_gross);
-      } else if (e.parameter["Status"] == "Returned") {
-        var sunpro_ret = trackerSheet.getRange("D44").getValue();
-        sunpro_ret += 1;
-        trackerSheet.getRange("D44").setValue(sunpro_ret);
-      }
-    } else if (e.parameter["Buyer"] == "Suntuity") {
-      if (e.parameter["Status"] == "Sold") {
-        var suntuity_gross = trackerSheet.getRange("B45").getValue();
-        suntuity_gross += 1;
-        trackerSheet.getRange("B45").setValue(suntuity_gross);
-      } else if (e.parameter["Status"] == "Returned") {
-        var suntuity_ret = trackerSheet.getRange("D45").getValue();
-        suntuity_ret += 1;
-        trackerSheet.getRange("D45").setValue(suntuity_ret);
-      }
-    } else if (e.parameter["Buyer"] == "Trinity") {
-      if (e.parameter["Status"] == "Sold") {
-        var trinity_gross = trackerSheet.getRange("B46").getValue();
-        trinity_gross += 1;
-        trackerSheet.getRange("B46").setValue(trinity_gross);
-      } else if (e.parameter["Status"] == "Returned") {
-        var trinity_ret = trackerSheet.getRange("D46").getValue();
-        trinity_ret += 1;
-        trackerSheet.getRange("D46").setValue(trinity_ret);
-      }
-    } else if (e.parameter["Buyer"] == "Sunpower") {
-      if (e.parameter["Status"] == "Sold") {
-        var sunpower_gross = trackerSheet.getRange("B47").getValue();
-        sunpower_gross += 1;
-        trackerSheet.getRange("B47").setValue(sunpower_gross);
-      } else if (e.parameter["Status"] == "Returned") {
-        var sunpower_ret = trackerSheet.getRange("D47").getValue();
-        sunpower_ret += 1;
-        trackerSheet.getRange("D47").setValue(sunpower_ret);
+    if ((e.parameter["agent_id"] != "agent_id") && (e.parameter["Agent"] != "full_name")) {
+      if (e.parameter["Buyer"] == "Sunpro") {
+        if (e.parameter["Status"] == "Sold") {
+          var sunpro_gross = trackerSheet.getRange("B44").getValue();
+          sunpro_gross += 1;
+          trackerSheet.getRange("B44").setValue(sunpro_gross);
+        } else if (e.parameter["Status"] == "Returned") {
+          var sunpro_ret = trackerSheet.getRange("D44").getValue();
+          sunpro_ret += 1;
+          trackerSheet.getRange("D44").setValue(sunpro_ret);
+        }
+      } else if (e.parameter["Buyer"] == "Suntuity") {
+        if (e.parameter["Status"] == "Sold") {
+          var suntuity_gross = trackerSheet.getRange("B45").getValue();
+          suntuity_gross += 1;
+          trackerSheet.getRange("B45").setValue(suntuity_gross);
+        } else if (e.parameter["Status"] == "Returned") {
+          var suntuity_ret = trackerSheet.getRange("D45").getValue();
+          suntuity_ret += 1;
+          trackerSheet.getRange("D45").setValue(suntuity_ret);
+        }
+      } else if (e.parameter["Buyer"] == "Trinity") {
+        if (e.parameter["Status"] == "Sold") {
+          var trinity_gross = trackerSheet.getRange("B46").getValue();
+          trinity_gross += 1;
+          trackerSheet.getRange("B46").setValue(trinity_gross);
+        } else if (e.parameter["Status"] == "Returned") {
+          var trinity_ret = trackerSheet.getRange("D46").getValue();
+          trinity_ret += 1;
+          trackerSheet.getRange("D46").setValue(trinity_ret);
+        }
+      } else if (e.parameter["Buyer"] == "Sunpower") {
+        if (e.parameter["Status"] == "Sold") {
+          var sunpower_gross = trackerSheet.getRange("B47").getValue();
+          sunpower_gross += 1;
+          trackerSheet.getRange("B47").setValue(sunpower_gross);
+        } else if (e.parameter["Status"] == "Returned") {
+          var sunpower_ret = trackerSheet.getRange("D47").getValue();
+          sunpower_ret += 1;
+          trackerSheet.getRange("D47").setValue(sunpower_ret);
+        }
       }
     }
 
