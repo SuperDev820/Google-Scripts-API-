@@ -1,0 +1,128 @@
+var DAY_MILLIS = 24 * 60 * 60 * 1000;
+
+function onOpen() {
+  var doc = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = doc.getSheetByName("Report");
+  
+  var d = new Date();
+  var currentDate = Utilities.formatDate(d, "GMT-5", 'MMMM dd, yyyy');
+  sheet.getRange("I1").setValue(currentDate);
+  sheet.getRange("K1").setValue(currentDate);
+}
+
+function submitData() {
+  var doc = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = doc.getSheetByName("Report");
+
+  var start, howManyToDelete;
+  start = 2;//Hard coded row number from where to start deleting
+  howManyToDelete = sheet.getLastRow() - start + 1;//How many rows to delete -
+  //The blank rows after the last row with content will not be deleted
+  sheet.deleteRows(start, howManyToDelete);
+
+  var datetime_start = Utilities.formatDate(sheet.getRange("I1").getValue(), "GMT-5", 'yyyy-MM-dd');
+  var datetime_end = Utilities.formatDate(sheet.getRange("K1").getValue(), "GMT-5", 'yyyy-MM-dd');
+  // Make a GET request and log the returned content.
+  var url = 'https://dmmarketing.ytel.com/x5/api/non_agent.php?function=agent_stats_export&user=101&pass=Idj3Udjv92Plvn3Ujdm2&source=postman&datetime_start=' + datetime_start + '+01:00:00&datetime_end=' + datetime_end + '+23:00:00&agent_user&stage&header&time_format=HF'
+  var response = UrlFetchApp.fetch(url);
+
+  var api_text = splitTest(response.getContentText(), "\n");
+  for (var i = 0; i < api_text.length-1; i++) {
+    report(api_text[i]);
+  }
+}
+
+function splitTest(text, charac) {
+  var array1 = [{}];
+  array1 = text.split(charac);
+  return array1
+}
+
+function report(text) {
+  var doc = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = doc.getSheetByName("Report");
+  var nextRow = sheet.getLastRow()+1; // get next row
+  var row = [];
+
+  var info_text = splitTest(text, "|");
+  var agent = info_text[0] + " " + info_text[1];
+  row.push(agent);
+  var temp = transfers(agent);
+  row.push(temp[0]);
+  row.push(temp[1]);
+  row.push(info_text[3]);
+  if (temp[0] == 0) {
+    row.push("-");
+  } else {
+    row.push(String(temp[1]/temp[0]*100)+"%");
+  }
+  if (info_text[3] == 0) {
+    row.push("-");
+  } else {
+    row.push(temp[1]/info_text[3]);
+  }
+  sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
+}
+
+function transfers(agent) {
+  var doc = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = doc.getSheetByName("Report");
+
+  var total_sum = 0;
+  var valid_sum = 0;
+  var dates = createDateSpan(sheet.getRange("I1").getValue(), sheet.getRange("K1").getValue());
+  var d = new Date();
+  var currentDate = d.getDate();
+  for (var i = 0; i < dates.length; i++) {
+    // Logger.log(dates[i].getDate())
+    // Logger.log(currentDate)
+    if (currentDate == dates[i].getDate()) {
+      var transferValues = getTransferValue(agent, "Everyday Tracker");
+    } else {
+      var transferValues = getTransferValue(agent, Utilities.formatDate(dates[i], "GMT-5", 'MMMM dd, yyyy'));
+    }
+    total_sum += transferValues[0];
+    valid_sum += transferValues[1];
+  }
+  return [total_sum, valid_sum];
+}
+
+function createDateSpan(startDate, endDate) {
+  if (startDate.getTime() > endDate.getTime()) {
+    throw Error('Start is later than end');
+  }
+
+  var dates = [];
+
+  var curDate = new Date(startDate.getTime());
+  while (!dateCompare(curDate, endDate)) {
+    dates.push(curDate);
+    curDate = new Date(curDate.getTime() + DAY_MILLIS);
+  }
+  dates.push(endDate);
+  return dates;
+}
+
+function dateCompare(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+}
+
+function getTransferValue(agent,sheetName) {
+  var doc = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = doc.getSheetByName(sheetName);
+
+  var currentRow = 0;
+  var agents = sheet.getRange(1, 1, 49, 1).getValues();
+  for (var counter = 0; counter <= 49; counter = counter + 1){
+    // Logger.log(agents[counter])
+    if ((agents[counter] != []) && (agents[counter] != null)){
+      if (agents[counter][0] == agent){
+        currentRow = counter+1;
+        break;
+      }
+    }
+  }
+  return [sheet.getRange(currentRow, 3).getValue(), sheet.getRange(currentRow, 4).getValue()];
+}
