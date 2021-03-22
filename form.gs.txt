@@ -18,8 +18,10 @@ function submitData() {
   start = 2;//Hard coded row number from where to start deleting
   howManyToDelete = sheet.getLastRow() - start + 1;//How many rows to delete -
   //The blank rows after the last row with content will not be deleted
-  sheet.deleteRows(start, howManyToDelete);
-
+  if (howManyToDelete != 0) {
+    sheet.deleteRows(start, howManyToDelete);
+  }
+  
   var datetime_start = Utilities.formatDate(sheet.getRange("I1").getValue(), "GMT-5", 'yyyy-MM-dd');
   var datetime_end = Utilities.formatDate(sheet.getRange("K1").getValue(), "GMT-5", 'yyyy-MM-dd');
   // Make a GET request and log the returned content.
@@ -112,7 +114,9 @@ function dateCompare(a, b) {
 function getTransferValue(agent,sheetName) {
   var doc = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = doc.getSheetByName(sheetName);
-
+  if (sheet == null) {
+    return [0, 0];
+  }
   var currentRow = 0;
   var agents = sheet.getRange(1, 1, 49, 1).getValues();
   for (var counter = 0; counter <= 49; counter = counter + 1){
@@ -124,5 +128,9 @@ function getTransferValue(agent,sheetName) {
       }
     }
   }
-  return [sheet.getRange(currentRow, 3).getValue(), sheet.getRange(currentRow, 4).getValue()];
+  if (currentRow == 0) {
+    return [0, 0];
+  } else {
+    return [sheet.getRange(currentRow, 3).getValue(), sheet.getRange(currentRow, 4).getValue()];
+  }
 }
