@@ -1,7 +1,8 @@
 // Usage
 //  1. Enter sheet name where data is to be written below
-        var SHEET_NAME = "Sheet1";
-        var TRACKER_SHEET_NAME = "Everyday Tracker";
+      var SHEET_NAME = "Sheet1";
+      var TRACKER_SHEET_NAME = "Everyday Tracker";
+      var SUNPRO_APPT_SHEET = "SunPro Appt Data";
         
 //  2. Run > setup
 //
@@ -37,99 +38,115 @@ function handleResponse(e) {
     var doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
     var sheet = doc.getSheetByName(SHEET_NAME);
     var trackerSheet = doc.getSheetByName(TRACKER_SHEET_NAME);
+    var sunproSheet = doc.getSheetByName(SUNPRO_APPT_SHEET);
 
-    // Zeroes Everyday Tracker out
-    var l = sheet.getRange(sheet.getLastRow(),6).getValue();
-    var lastDate = l.getDate();
-    var d = new Date();
-    var currentDate = d.getDate();
-    if (lastDate != currentDate) {
-      var cloneName = Utilities.formatDate(l, "GMT-5", 'MMMM dd, yyyy');
-      cloneGoogleSheet(cloneName);
-      zero(6, 22, 3);
-      zero(6, 22, 4);
-      zero(27, 41, 3);
-      zero(27, 41, 4);
-      zero(44, 47, 2);
-      zero(44, 48, 4);
+    if (e.parameter.lp_campaign_id) {
+      var sunpro_headers = sunproSheet.getRange(1, 1, 1, sunproSheet.getLastColumn()).getValues()[0];
+      var sunpro_nextRow = sunproSheet.getLastRow()+1; // get next row
+      var sunpro_row = [];
+      // loop through the header columns
+      for (i in sunpro_headers){
+        if (sunpro_headers[i] == "Timestamp"){ // special case if you include a 'Timestamp' column
+          sunpro_row.push(new Date());
+        } else { // else use header name to get data
+          sunpro_row.push(e.parameter[sunpro_headers[i]]);
+        }
+      }
+      sunproSheet.getRange(sunpro_nextRow, 1, 1, sunpro_row.length).setValues([sunpro_row]);
+    } else {
+      // Zeroes Everyday Tracker out
+      var l = sheet.getRange(sheet.getLastRow(),6).getValue();
+      var lastDate = l.getDate();
+      var d = new Date();
+      var currentDate = d.getDate();
+      if (lastDate != currentDate) {
+        var cloneName = Utilities.formatDate(l, "GMT-4", 'MMMM dd, yyyy');
+        cloneGoogleSheet(cloneName);
+        zero(6, 22, 3);
+        zero(6, 22, 4);
+        zero(27, 41, 3);
+        zero(27, 41, 4);
+        zero(44, 47, 2);
+        zero(44, 48, 4);
+      }
+
+      // we'll assume header is in row 1 but you can override with header_row in GET/POST data
+      var headRow = e.parameter.header_row || 1;
+      var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      var nextRow = sheet.getLastRow()+1; // get next row
+      var row = [];
+      // loop through the header columns
+      for (i in headers){
+        if (headers[i] == "Timestamp"){ // special case if you include a 'Timestamp' column
+          row.push(new Date());
+        } else { // else use header name to get data
+          row.push(e.parameter[headers[i]]);
+        }
+      }
+      // more efficient to set values as [][] array than individually
+      sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
+
+      // return data to Tracker
+      if ((e.parameter["agent_id"] != "") && (e.parameter["Agent"] != "")) {
+        var currentRow = getRow(e.parameter["agent_id"], e.parameter["Agent"]);
+        if (currentRow != 0) {
+          if (e.parameter["Status"] == "Sold") {
+            var temp1 = trackerSheet.getRange(currentRow,3).getValue();
+            trackerSheet.getRange(currentRow,3).setValue(temp1 + 1);
+            var temp2 = trackerSheet.getRange(currentRow,4).getValue();
+            trackerSheet.getRange(currentRow,4).setValue(temp2 + 1);
+          } else if (e.parameter["Status"] == "Returned") {
+            var temp2 = trackerSheet.getRange(currentRow,4).getValue();
+            trackerSheet.getRange(currentRow,4).setValue(temp2 - 1);
+          }
+        }
+      }
+
+      if ((e.parameter["agent_id"] != "agent_id") && (e.parameter["Agent"] != "full_name")) {
+        if (e.parameter["Buyer"] == "Sunpro") {
+          if (e.parameter["Status"] == "Sold") {
+            var sunpro_gross = trackerSheet.getRange("B44").getValue();
+            sunpro_gross += 1;
+            trackerSheet.getRange("B44").setValue(sunpro_gross);
+          } else if (e.parameter["Status"] == "Returned") {
+            var sunpro_ret = trackerSheet.getRange("D44").getValue();
+            sunpro_ret += 1;
+            trackerSheet.getRange("D44").setValue(sunpro_ret);
+          }
+        } else if (e.parameter["Buyer"] == "Suntuity") {
+          if (e.parameter["Status"] == "Sold") {
+            var suntuity_gross = trackerSheet.getRange("B45").getValue();
+            suntuity_gross += 1;
+            trackerSheet.getRange("B45").setValue(suntuity_gross);
+          } else if (e.parameter["Status"] == "Returned") {
+            var suntuity_ret = trackerSheet.getRange("D45").getValue();
+            suntuity_ret += 1;
+            trackerSheet.getRange("D45").setValue(suntuity_ret);
+          }
+        } else if (e.parameter["Buyer"] == "Trinity") {
+          if (e.parameter["Status"] == "Sold") {
+            var trinity_gross = trackerSheet.getRange("B46").getValue();
+            trinity_gross += 1;
+            trackerSheet.getRange("B46").setValue(trinity_gross);
+          } else if (e.parameter["Status"] == "Returned") {
+            var trinity_ret = trackerSheet.getRange("D46").getValue();
+            trinity_ret += 1;
+            trackerSheet.getRange("D46").setValue(trinity_ret);
+          }
+        } else if (e.parameter["Buyer"] == "Sunpower") {
+          if (e.parameter["Status"] == "Sold") {
+            var sunpower_gross = trackerSheet.getRange("B47").getValue();
+            sunpower_gross += 1;
+            trackerSheet.getRange("B47").setValue(sunpower_gross);
+          } else if (e.parameter["Status"] == "Returned") {
+            var sunpower_ret = trackerSheet.getRange("D47").getValue();
+            sunpower_ret += 1;
+            trackerSheet.getRange("D47").setValue(sunpower_ret);
+          }
+        }
+      }
     }
     
-    // we'll assume header is in row 1 but you can override with header_row in GET/POST data
-    var headRow = e.parameter.header_row || 1;
-    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    var nextRow = sheet.getLastRow()+1; // get next row
-    var row = [];
-    // loop through the header columns
-    for (i in headers){
-      if (headers[i] == "Timestamp"){ // special case if you include a 'Timestamp' column
-        row.push(new Date());
-      } else { // else use header name to get data
-        row.push(e.parameter[headers[i]]);
-      }
-    }
-    // more efficient to set values as [][] array than individually
-    sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
-
-    // return data to Tracker
-    if ((e.parameter["agent_id"] != "") && (e.parameter["Agent"] != "")) {
-      var currentRow = getRow(e.parameter["agent_id"], e.parameter["Agent"]);
-      if (currentRow != 0) {
-        if (e.parameter["Status"] == "Sold") {
-          var temp1 = trackerSheet.getRange(currentRow,3).getValue();
-          trackerSheet.getRange(currentRow,3).setValue(temp1 + 1);
-          var temp2 = trackerSheet.getRange(currentRow,4).getValue();
-          trackerSheet.getRange(currentRow,4).setValue(temp2 + 1);
-        } else if (e.parameter["Status"] == "Returned") {
-          var temp2 = trackerSheet.getRange(currentRow,4).getValue();
-          trackerSheet.getRange(currentRow,4).setValue(temp2 - 1);
-        }
-      }
-    }
-
-    if ((e.parameter["agent_id"] != "agent_id") && (e.parameter["Agent"] != "full_name")) {
-      if (e.parameter["Buyer"] == "Sunpro") {
-        if (e.parameter["Status"] == "Sold") {
-          var sunpro_gross = trackerSheet.getRange("B44").getValue();
-          sunpro_gross += 1;
-          trackerSheet.getRange("B44").setValue(sunpro_gross);
-        } else if (e.parameter["Status"] == "Returned") {
-          var sunpro_ret = trackerSheet.getRange("D44").getValue();
-          sunpro_ret += 1;
-          trackerSheet.getRange("D44").setValue(sunpro_ret);
-        }
-      } else if (e.parameter["Buyer"] == "Suntuity") {
-        if (e.parameter["Status"] == "Sold") {
-          var suntuity_gross = trackerSheet.getRange("B45").getValue();
-          suntuity_gross += 1;
-          trackerSheet.getRange("B45").setValue(suntuity_gross);
-        } else if (e.parameter["Status"] == "Returned") {
-          var suntuity_ret = trackerSheet.getRange("D45").getValue();
-          suntuity_ret += 1;
-          trackerSheet.getRange("D45").setValue(suntuity_ret);
-        }
-      } else if (e.parameter["Buyer"] == "Trinity") {
-        if (e.parameter["Status"] == "Sold") {
-          var trinity_gross = trackerSheet.getRange("B46").getValue();
-          trinity_gross += 1;
-          trackerSheet.getRange("B46").setValue(trinity_gross);
-        } else if (e.parameter["Status"] == "Returned") {
-          var trinity_ret = trackerSheet.getRange("D46").getValue();
-          trinity_ret += 1;
-          trackerSheet.getRange("D46").setValue(trinity_ret);
-        }
-      } else if (e.parameter["Buyer"] == "Sunpower") {
-        if (e.parameter["Status"] == "Sold") {
-          var sunpower_gross = trackerSheet.getRange("B47").getValue();
-          sunpower_gross += 1;
-          trackerSheet.getRange("B47").setValue(sunpower_gross);
-        } else if (e.parameter["Status"] == "Returned") {
-          var sunpower_ret = trackerSheet.getRange("D47").getValue();
-          sunpower_ret += 1;
-          trackerSheet.getRange("D47").setValue(sunpower_ret);
-        }
-      }
-    }
-
     // return json success results
     return ContentService
           .createTextOutput(JSON.stringify({"result":"success", "row": nextRow}))
@@ -156,7 +173,7 @@ function getRow(agent_id, agent_name) {
   var a = 0;
   var agent = String(agent_id) + " " + agent_name;
   var agents = trackerSheet.getRange(1, 1, 49, 1).getValues();
-  for (var counter = 0; counter <= 39; counter = counter + 1){
+  for (var counter = 0; counter <= 49; counter = counter + 1){
     if (agents[counter][0] == agent){
       a = counter+1;
       break;
@@ -189,6 +206,9 @@ function cloneGoogleSheet(cloneName) {
   doc.renameActiveSheet(cloneName);
   var cloneSheet = doc.getSheetByName(cloneName);
   cloneSheet.getRange("A1").setValue(cloneName);
+  var d = new Date();
+  var currentDate = Utilities.formatDate(d, "GMT-4", 'MMMM dd, yyyy');
+  trackerSheet.getRange("A1").setValue(currentDate);
 }
 
 function zero(to, from, column) {
@@ -200,10 +220,187 @@ function zero(to, from, column) {
   }
 }
 
-// function test() {
-//   var doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
-//   var sheet = doc.getSheetByName(SHEET_NAME);
-//   var l = sheet.getRange(sheet.getLastRow(),6).getValue();
-//   var cloneName = Utilities.formatDate(l, "GMT-5", 'MMMM dd, yyyy');
-//   var a=1;
-// }
+var DAY_MILLIS = 24 * 60 * 60 * 1000;
+
+function onOpen() {
+  var doc = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = doc.getSheetByName("Report");
+  
+  var d = new Date();
+  var currentDate = Utilities.formatDate(d, "GMT-4", 'MMMM dd, yyyy');
+  sheet.getRange("I1").setValue(currentDate);
+  sheet.getRange("K1").setValue(currentDate);
+}
+
+function submitData() {
+  var doc = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = doc.getSheetByName("Report");
+
+  var start, howManyToDelete;
+  start = 2;//Hard coded row number from where to start deleting
+  howManyToDelete = sheet.getLastRow() - start + 1;//How many rows to delete -
+  //The blank rows after the last row with content will not be deleted
+  if (howManyToDelete != 0) {
+    sheet.deleteRows(start, howManyToDelete);
+  }
+  
+  var datetime_start = Utilities.formatDate(sheet.getRange("I1").getValue(), "GMT-4", 'yyyy-MM-dd');
+  var datetime_end = Utilities.formatDate(sheet.getRange("K1").getValue(), "GMT-4", 'yyyy-MM-dd');
+  // Make a GET request and log the returned content.
+  var url = 'https://dmmarketing.ytel.com/x5/api/non_agent.php?function=agent_stats_export&user=101&pass=Idj3Udjv92Plvn3Ujdm2&source=postman&datetime_start=' + datetime_start + '+00:00:01&datetime_end=' + datetime_end + '+23:59:59&agent_user&stage&header&time_format=HF'
+  var response = UrlFetchApp.fetch(url);
+  Logger.log(response)
+  var api_text = splitTest(response.getContentText(), "\n");
+  for (var i = 0; i < api_text.length-1; i++) {
+    report(api_text[i]);
+  }
+}
+
+function splitTest(text, charac) {
+  var array1 = [{}];
+  array1 = text.split(charac);
+  return array1
+}
+
+function report(text) {
+  var doc = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = doc.getSheetByName("Report");
+  var nextRow = sheet.getLastRow()+1; // get next row
+  var row = [];
+
+  var info_text = splitTest(text, "|");
+  var agent = info_text[0] + " " + info_text[1];
+  row.push(agent);
+  var temp = transfers(agent);
+  row.push(temp[0]);
+  row.push(temp[1]);
+  row.push(info_text[12]);
+  if (temp[0] == 0) {
+    row.push("-");
+  } else {
+    row.push(String(temp[1]/temp[0]*100)+"%");
+  }
+  if (info_text[3] == 0) {
+    row.push("-");
+  } else {
+    row.push(temp[1]/info_text[12]);
+  }
+  sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
+}
+
+function transfers(agent) {
+  var doc = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = doc.getSheetByName("Report");
+  var sheet1 = doc.getSheetByName("Sheet1");
+
+  var total_sum = 0;
+  var valid_sum = 0;
+  var dates = createDateSpan(sheet.getRange("I1").getValue(), sheet.getRange("K1").getValue());
+  var d = new Date();
+  var currentDate = d.getDate();
+  var l = sheet1.getRange(sheet1.getLastRow(),6).getValue();
+  // var appt_date_time = Utilities.formatDate(l, "GMT-4", 'yyyy-mm-dd HH:mm:ss');
+  var lastDate = l.getDate();
+  for (var i = 0; i < dates.length; i++) {
+    // Logger.log(dates[i].getDate())
+    // Logger.log(currentDate)
+    if (currentDate == dates[i].getDate() || lastDate == dates[i].getDate()) {
+      var transferValues = getTransferValue(agent, "Everyday Tracker");
+    } else {
+      var transferValues = getTransferValue(agent, Utilities.formatDate(dates[i], "GMT-4", 'MMMM dd, yyyy'));
+    }
+    total_sum += transferValues[0];
+    valid_sum += transferValues[1];
+  }
+  return [total_sum, valid_sum];
+}
+
+function createDateSpan(startDate, endDate) {
+  if (startDate.getTime() > endDate.getTime()) {
+    throw Error('Start is later than end');
+  }
+
+  var dates = [];
+
+  var curDate = new Date(startDate.getTime());
+  while (!dateCompare(curDate, endDate)) {
+    dates.push(curDate);
+    curDate = new Date(curDate.getTime() + DAY_MILLIS);
+  }
+  dates.push(endDate);
+  return dates;
+}
+
+function dateCompare(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+}
+
+function getTransferValue(agent,sheetName) {
+  var doc = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = doc.getSheetByName(sheetName);
+  if (sheet == null) {
+    return [0, 0];
+  }
+  var currentRow = 0;
+  var agents = sheet.getRange(1, 1, 49, 1).getValues();
+  for (var counter = 0; counter <= 49; counter = counter + 1){
+    // Logger.log(agents[counter])
+    if ((agents[counter] != []) && (agents[counter] != null)){
+      if (agents[counter][0] == agent){
+        currentRow = counter+1;
+        break;
+      }
+    }
+  }
+  if (currentRow == 0) {
+    return [0, 0];
+  } else {
+    return [sheet.getRange(currentRow, 3).getValue(), sheet.getRange(currentRow, 4).getValue()];
+  }
+}
+
+function sunpro() {
+  var doc = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = doc.getSheetByName("SunPro Appt Data");
+
+  var url = "https://gosunpro.leadspediatrack.com/post.do"
+  var post_row = sheet.getRange("Z2").getValue();
+  var rowData = sheet.getRange(post_row, 1, post_row, sheet.getLastColumn()).getValues()[0];
+  // var appt_date_time = Utilities.formatDate(rowData[22], "GMT-4", 'yyyy-mm-dd HH:mm:ss');
+  var appt_date_time = rowData[22];
+  var formData = {
+    "lp_campaign_id" : rowData[20],
+    "lp_campaign_key" : rowData[21],
+    "phone_home" : String(rowData[1]),
+    "first_name" : rowData[2],
+    "last_name" : rowData[3],
+    "address" : rowData[4],
+    "city" : rowData[5],
+    "state" : rowData[6],
+    "email_address" : rowData[8],
+    "appt_date_time" : appt_date_time,
+    "lp_price" : rowData[12], 
+    "jornaya_lead_id" : rowData[16],
+    "zip_code" : String(rowData[7]), 
+  };
+  var options = {
+    'method' : 'post',
+    'payload' : formData
+  };
+  var response = UrlFetchApp.fetch(url, options);
+  var array1 = splitTest(response.getContentText(), "<");
+  var array2 = splitTest(array1[2], ">");
+  if (array2[1] == "success") {
+    // Logger.log(array2[1])
+    sheet.getRange(post_row, 18).setValue("success")
+  } else if (array2[1] == "failed") {
+    // Logger.log(array2[1])
+    array3 = splitTest(response.getContentText(), "<error>");
+    array4 = splitTest(array3[1], "</error>");
+    sheet.getRange(post_row, 18).setValue("failed"+", "+array4[0])
+  }
+  // Logger.log(response.getContentText())
+  // Logger.log(array4)
+}
