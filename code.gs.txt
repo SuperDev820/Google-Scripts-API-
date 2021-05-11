@@ -62,12 +62,14 @@ function handleResponse(e) {
       if (lastDate != currentDate) {
         var cloneName = Utilities.formatDate(l, "GMT-4", 'MMMM dd, yyyy');
         cloneGoogleSheet(cloneName);
-        zero(6, 22, 3);
-        zero(6, 22, 4);
-        zero(27, 41, 3);
-        zero(27, 41, 4);
-        zero(44, 47, 2);
-        zero(44, 48, 4);
+        zero(7, 12, 3);
+        zero(7, 12, 4);
+        zero(14, 32, 3);
+        zero(14, 32, 4);
+        zero(37, 56, 3);
+        zero(37, 56, 4);
+        zero(59, 62, 2);
+        zero(59, 62, 4);
       }
 
       // we'll assume header is in row 1 but you can override with header_row in GET/POST data
@@ -85,9 +87,10 @@ function handleResponse(e) {
       }
       // more efficient to set values as [][] array than individually
       sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
-
+      var updated_at = new Date(e.parameter["updated_at"]);
+      var updated_at_date = Utilities.formatDate(updated_at, "GMT-4", 'MMMM dd, yyyy');
       // return data to Tracker
-      if ((e.parameter["agent_id"] != "") && (e.parameter["Agent"] != "")) {
+      if ((e.parameter["agent_id"] != "") && (e.parameter["Agent"] != "") && (updated_at.getDate() == currentDate)) {
         var currentRow = getRow(e.parameter["agent_id"], e.parameter["Agent"]);
         if (currentRow != 0) {
           if (e.parameter["Status"] == "Sold") {
@@ -99,49 +102,116 @@ function handleResponse(e) {
             var temp2 = trackerSheet.getRange(currentRow,4).getValue();
             trackerSheet.getRange(currentRow,4).setValue(temp2 - 1);
           }
-        }
-      }
 
-      if ((e.parameter["agent_id"] != "agent_id") && (e.parameter["Agent"] != "full_name")) {
-        if (e.parameter["Buyer"] == "Sunpro") {
-          if (e.parameter["Status"] == "Sold") {
-            var sunpro_gross = trackerSheet.getRange("B44").getValue();
-            sunpro_gross += 1;
-            trackerSheet.getRange("B44").setValue(sunpro_gross);
-          } else if (e.parameter["Status"] == "Returned") {
-            var sunpro_ret = trackerSheet.getRange("D44").getValue();
-            sunpro_ret += 1;
-            trackerSheet.getRange("D44").setValue(sunpro_ret);
+          if ((e.parameter["agent_id"] != "agent_id") && (e.parameter["Agent"] != "full_name")) {
+            if (e.parameter["Buyer"] == "Sunpro") {
+              if (e.parameter["Status"] == "Sold") {
+                var sunpro_gross = trackerSheet.getRange("B59").getValue();
+                sunpro_gross += 1;
+                trackerSheet.getRange("B59").setValue(sunpro_gross);
+              } else if (e.parameter["Status"] == "Returned") {
+                var sunpro_ret = trackerSheet.getRange("D59").getValue();
+                sunpro_ret += 1;
+                trackerSheet.getRange("D59").setValue(sunpro_ret);
+              }
+            } else if (e.parameter["Buyer"] == "Suntuity") {
+              if (e.parameter["Status"] == "Sold") {
+                var suntuity_gross = trackerSheet.getRange("B60").getValue();
+                suntuity_gross += 1;
+                trackerSheet.getRange("B60").setValue(suntuity_gross);
+              } else if (e.parameter["Status"] == "Returned") {
+                var suntuity_ret = trackerSheet.getRange("D60").getValue();
+                suntuity_ret += 1;
+                trackerSheet.getRange("D60").setValue(suntuity_ret);
+              }
+            } else if (e.parameter["Buyer"] == "Trinity") {
+              if (e.parameter["Status"] == "Sold") {
+                var trinity_gross = trackerSheet.getRange("B61").getValue();
+                trinity_gross += 1;
+                trackerSheet.getRange("B61").setValue(trinity_gross);
+              } else if (e.parameter["Status"] == "Returned") {
+                var trinity_ret = trackerSheet.getRange("D61").getValue();
+                trinity_ret += 1;
+                trackerSheet.getRange("D61").setValue(trinity_ret);
+              }
+            } else if (e.parameter["Buyer"] == "Sunpower") {
+              if (e.parameter["Status"] == "Sold") {
+                var sunpower_gross = trackerSheet.getRange("B62").getValue();
+                sunpower_gross += 1;
+                trackerSheet.getRange("B62").setValue(sunpower_gross);
+              } else if (e.parameter["Status"] == "Returned") {
+                var sunpower_ret = trackerSheet.getRange("D62").getValue();
+                sunpower_ret += 1;
+                trackerSheet.getRange("D62").setValue(sunpower_ret);
+              }
+            }
           }
-        } else if (e.parameter["Buyer"] == "Suntuity") {
-          if (e.parameter["Status"] == "Sold") {
-            var suntuity_gross = trackerSheet.getRange("B45").getValue();
-            suntuity_gross += 1;
-            trackerSheet.getRange("B45").setValue(suntuity_gross);
-          } else if (e.parameter["Status"] == "Returned") {
-            var suntuity_ret = trackerSheet.getRange("D45").getValue();
-            suntuity_ret += 1;
-            trackerSheet.getRange("D45").setValue(suntuity_ret);
+        }
+      } else if ((e.parameter["agent_id"] != "") && (e.parameter["Agent"] != "") && (updated_at.getDate() != currentDate)) {
+        var prevtrackersheet = doc.getSheetByName(updated_at_date);
+        var currentRow = 0;
+        var agent = String(e.parameter["agent_id"]) + " " + e.parameter["Agent"];
+        var agents = prevtrackersheet.getRange(1, 1, 64, 1).getValues();
+        for (var counter = 0; counter <= 64; counter = counter + 1){
+          if (agents[counter][0] == agent){
+            currentRow = counter+1;
+            break;
           }
-        } else if (e.parameter["Buyer"] == "Trinity") {
+        }
+
+        if (currentRow != 0) {
           if (e.parameter["Status"] == "Sold") {
-            var trinity_gross = trackerSheet.getRange("B46").getValue();
-            trinity_gross += 1;
-            trackerSheet.getRange("B46").setValue(trinity_gross);
+            var temp1 = prevtrackersheet.getRange(currentRow,3).getValue();
+            prevtrackersheet.getRange(currentRow,3).setValue(temp1 + 1);
+            var temp2 = prevtrackersheet.getRange(currentRow,4).getValue();
+            prevtrackersheet.getRange(currentRow,4).setValue(temp2 + 1);
           } else if (e.parameter["Status"] == "Returned") {
-            var trinity_ret = trackerSheet.getRange("D46").getValue();
-            trinity_ret += 1;
-            trackerSheet.getRange("D46").setValue(trinity_ret);
+            var temp2 = prevtrackersheet.getRange(currentRow,4).getValue();
+            prevtrackersheet.getRange(currentRow,4).setValue(temp2 - 1);
           }
-        } else if (e.parameter["Buyer"] == "Sunpower") {
-          if (e.parameter["Status"] == "Sold") {
-            var sunpower_gross = trackerSheet.getRange("B47").getValue();
-            sunpower_gross += 1;
-            trackerSheet.getRange("B47").setValue(sunpower_gross);
-          } else if (e.parameter["Status"] == "Returned") {
-            var sunpower_ret = trackerSheet.getRange("D47").getValue();
-            sunpower_ret += 1;
-            trackerSheet.getRange("D47").setValue(sunpower_ret);
+
+          if ((e.parameter["agent_id"] != "agent_id") && (e.parameter["Agent"] != "full_name")) {
+            if (e.parameter["Buyer"] == "Sunpro") {
+              if (e.parameter["Status"] == "Sold") {
+                var sunpro_gross = prevtrackersheet.getRange("B59").getValue();
+                sunpro_gross += 1;
+                prevtrackersheet.getRange("B59").setValue(sunpro_gross);
+              } else if (e.parameter["Status"] == "Returned") {
+                var sunpro_ret = prevtrackersheet.getRange("D59").getValue();
+                sunpro_ret += 1;
+                prevtrackersheet.getRange("D59").setValue(sunpro_ret);
+              }
+            } else if (e.parameter["Buyer"] == "Suntuity") {
+              if (e.parameter["Status"] == "Sold") {
+                var suntuity_gross = prevtrackersheet.getRange("B60").getValue();
+                suntuity_gross += 1;
+                prevtrackersheet.getRange("B60").setValue(suntuity_gross);
+              } else if (e.parameter["Status"] == "Returned") {
+                var suntuity_ret = prevtrackersheet.getRange("D60").getValue();
+                suntuity_ret += 1;
+                prevtrackersheet.getRange("D60").setValue(suntuity_ret);
+              }
+            } else if (e.parameter["Buyer"] == "Trinity") {
+              if (e.parameter["Status"] == "Sold") {
+                var trinity_gross = prevtrackersheet.getRange("B61").getValue();
+                trinity_gross += 1;
+                prevtrackersheet.getRange("B61").setValue(trinity_gross);
+              } else if (e.parameter["Status"] == "Returned") {
+                var trinity_ret = prevtrackersheet.getRange("D61").getValue();
+                trinity_ret += 1;
+                prevtrackersheet.getRange("D61").setValue(trinity_ret);
+              }
+            } else if (e.parameter["Buyer"] == "Sunpower") {
+              if (e.parameter["Status"] == "Sold") {
+                var sunpower_gross = prevtrackersheet.getRange("B62").getValue();
+                sunpower_gross += 1;
+                prevtrackersheet.getRange("B62").setValue(sunpower_gross);
+              } else if (e.parameter["Status"] == "Returned") {
+                var sunpower_ret = prevtrackersheet.getRange("D62").getValue();
+                sunpower_ret += 1;
+                prevtrackersheet.getRange("D62").setValue(sunpower_ret);
+              }
+            }
           }
         }
       }
@@ -172,8 +242,8 @@ function getRow(agent_id, agent_name) {
 
   var a = 0;
   var agent = String(agent_id) + " " + agent_name;
-  var agents = trackerSheet.getRange(1, 1, 49, 1).getValues();
-  for (var counter = 0; counter <= 49; counter = counter + 1){
+  var agents = trackerSheet.getRange(1, 1, 64, 1).getValues();
+  for (var counter = 0; counter <= 64; counter = counter + 1){
     if (agents[counter][0] == agent){
       a = counter+1;
       break;
@@ -344,8 +414,8 @@ function getTransferValue(agent,sheetName) {
     return [0, 0];
   }
   var currentRow = 0;
-  var agents = sheet.getRange(1, 1, 49, 1).getValues();
-  for (var counter = 0; counter <= 49; counter = counter + 1){
+  var agents = sheet.getRange(1, 1, 64, 1).getValues();
+  for (var counter = 0; counter <= 64; counter = counter + 1){
     // Logger.log(agents[counter])
     if ((agents[counter] != []) && (agents[counter] != null)){
       if (agents[counter][0] == agent){
@@ -366,41 +436,62 @@ function sunpro() {
   var sheet = doc.getSheetByName("SunPro Appt Data");
 
   var url = "https://gosunpro.leadspediatrack.com/post.do"
-  var post_row = sheet.getRange("Z2").getValue();
+  var post_row = sheet.getRange("AA2").getValue();
   var rowData = sheet.getRange(post_row, 1, post_row, sheet.getLastColumn()).getValues()[0];
   // var appt_date_time = Utilities.formatDate(rowData[22], "GMT-4", 'yyyy-mm-dd HH:mm:ss');
-  var appt_date_time = rowData[22];
+  var appt_date_time = rowData[23];
   var formData = {
-    "lp_campaign_id" : rowData[20],
-    "lp_campaign_key" : rowData[21],
+    "lp_campaign_id" : rowData[21],
+    "lp_campaign_key" : rowData[22],
     "phone_home" : String(rowData[1]),
     "first_name" : rowData[2],
     "last_name" : rowData[3],
-    "address" : rowData[4],
-    "city" : rowData[5],
-    "state" : rowData[6],
-    "email_address" : rowData[8],
+    "address" : rowData[5],
+    "city" : rowData[6],
+    "state" : rowData[7],
+    "email_address" : rowData[9],
     "appt_date_time" : appt_date_time,
-    "lp_price" : rowData[12], 
-    "jornaya_lead_id" : rowData[16],
-    "zip_code" : String(rowData[7]), 
+    "lp_price" : rowData[13], 
+    "jornaya_lead_id" : rowData[17],
+    "zip_code" : String(rowData[8]),
+    "comments" : rowData[0],
   };
   var options = {
     'method' : 'post',
-    'payload' : formData
+    'payload' : formData,
   };
   var response = UrlFetchApp.fetch(url, options);
-  var array1 = splitTest(response.getContentText(), "<");
-  var array2 = splitTest(array1[2], ">");
-  if (array2[1] == "success") {
-    // Logger.log(array2[1])
-    sheet.getRange(post_row, 18).setValue("success")
-  } else if (array2[1] == "failed") {
-    // Logger.log(array2[1])
-    array3 = splitTest(response.getContentText(), "<error>");
-    array4 = splitTest(array3[1], "</error>");
-    sheet.getRange(post_row, 18).setValue("failed"+", "+array4[0])
+  var resText = response.getContentText();
+  Logger.log(resText.includes("Invalid Request"))
+  if (resText.includes("Invalid Request")) {
+    sheet.getRange(post_row, 19).setValue("failed Invalid Request")
+  } else if (resText.includes("success")) {
+    sheet.getRange(post_row, 19).setValue("success")
+  } else {
+    array1 = splitTest(resText, "<error>");
+    array2 = splitTest(array1[1], "</error>");
+    sheet.getRange(post_row, 19).setValue("failed " + array2[0])
   }
-  // Logger.log(response.getContentText())
-  // Logger.log(array4)
 }
+
+// function test() {
+//   var doc = SpreadsheetApp.getActiveSpreadsheet();
+//   var sheet = doc.getSheetByName("Sheet1");
+
+//   var c = "2021-04-24 21:20:59";
+//   var created_at = new Date(c);
+//   var created_at_date = created_at.getDate();
+//   var d = new Date();
+//   var currentDate = d.getDate();
+//   var a = 0;
+//   var vendor = '2e2d3d16';
+//   var vendors = sheet.getRange(7361, 1, 7510, 1).getValues();
+//   var l = vendors.length;
+//   for (var i = 0; i < l; i++){
+//     if (vendors[i][0] == vendor){
+//       a = a+1;
+//     }
+//   }
+//   Logger.log(a);
+// }
+
